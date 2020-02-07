@@ -1,9 +1,21 @@
+use super::db::schema::*;
+use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SysInfoSnapshot {
-    pub pc_id: String,
+#[derive(Debug, Deserialize, Insertable)]
+#[table_name = "entries"]
+pub struct SysInfoSnapshotDto {
+    pub pc_name: String,
     pub cpu_usage: String,
     pub mem_usage: String,
-    pub recorded_at: u64,
+    pub recorded_at: i64,
+}
+
+#[derive(Debug, Serialize, Queryable)]
+pub struct SysInfoSnapshot {
+    pub id: u32,
+    pub pc_name: String,
+    pub cpu_usage: String,
+    pub mem_usage: String,
+    pub recorded_at: i64,
 }
