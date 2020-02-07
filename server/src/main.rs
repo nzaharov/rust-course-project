@@ -42,7 +42,12 @@ async fn get_sys_info_page(
     let connection = pool.get().expect("Could not acquire connection");
 
     let result = web::block(move || {
-        db::fetch_log_page_by_name(&pc_name, params.size, params.index, &connection)
+        db::fetch_log_page_by_name(
+            &pc_name,
+            params.size as i64,
+            params.index as i64,
+            &connection,
+        )
     })
     .await
     .map_err(|e| {

@@ -23,5 +23,5 @@ pub struct SysInfoSnapshot {
 #[derive(Debug, Serialize)]
 pub struct SysLogResponse {
     pub entries: Vec<SysInfoSnapshot>,
-    pub page_count: usize,
+    pub page_count: i64,
 }
