@@ -1,4 +1,4 @@
-use super::db::schema::*;
+use super::db::schema::entries;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 

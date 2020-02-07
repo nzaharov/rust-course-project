@@ -10,7 +10,7 @@ use actix_web::{
 };
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use serde::Deserialize;
+use serde::{ser, Deserialize};
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -20,8 +20,17 @@ struct PageParams {
     index: u8,
 }
 
-async fn list_systems(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
-    Ok(HttpResponse::Ok().body("list"))
+async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+    let connection = pool.get().expect("Could not acquire connection");
+
+    let systems = web::block(move || db::list_systems(&connection))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish();
+        })?;
+
+    Ok(HttpResponse::Ok().json(systems))
 }
 
 async fn get_sys_info_page(
@@ -80,7 +89,7 @@ async fn main() -> std::io::Result<()> {
                     scope("/sysinfo")
                         .service(
                             resource("")
-                                .route(get().to(list_systems))
+                                .route(get().to(get_sys_list))
                                 .route(post().to(post_sys_info)),
                         )
                         .service(
