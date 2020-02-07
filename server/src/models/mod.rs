@@ -13,9 +13,15 @@ pub struct SysInfoSnapshotDto {
 
 #[derive(Debug, Serialize, Queryable)]
 pub struct SysInfoSnapshot {
-    pub id: u32,
+    pub id: i32,
     pub pc_name: String,
     pub cpu_usage: String,
     pub mem_usage: String,
     pub recorded_at: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SysLogResponse {
+    pub entries: Vec<SysInfoSnapshot>,
+    pub page_count: usize,
 }

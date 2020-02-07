@@ -10,7 +10,7 @@ use actix_web::{
 };
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use serde::{ser, Deserialize};
+use serde::Deserialize;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -35,13 +35,25 @@ async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
 
 async fn get_sys_info_page(
     pool: web::Data<DbPool>,
-    pc_id: web::Path<String>,
+    pc_name: web::Path<String>,
     params: web::Query<PageParams>,
 ) -> Result<HttpResponse, Error> {
-    println!("{} {}", params.size, params.index);
-    println!("{}", pc_id.into_inner());
+    let pc_name = pc_name.into_inner();
+    let connection = pool.get().expect("Could not acquire connection");
 
-    Ok(HttpResponse::Ok().finish())
+    let result = web::block(move || {
+        db::fetch_log_page_by_name(&pc_name, params.size, params.index, &connection)
+    })
+    .await
+    .map_err(|e| {
+        eprintln!("{}", e);
+        HttpResponse::InternalServerError().finish();
+    })?;
+
+    match result {
+        Some(sys_log) => Ok(HttpResponse::Ok().json(sys_log)),
+        None => Ok(HttpResponse::NotFound().finish()),
+    }
 }
 
 async fn clear_sys_entries(
