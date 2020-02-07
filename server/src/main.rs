@@ -2,21 +2,34 @@ mod models;
 
 use actix_web::{
     middleware,
-    web::{get, post, resource, scope, Json, Path},
-    App, HttpServer, Responder,
+    web::{get, post, resource, scope, Json, Path, Query},
+    App, Error, HttpResponse, HttpServer,
 };
+use serde::Deserialize;
 
-async fn list_systems() -> impl Responder {
-    "list"
+#[derive(Deserialize)]
+struct PageParams {
+    size: u8,
+    index: u8,
 }
 
-async fn get_sys_info_page(pc_id: Path<String>) -> impl Responder {
-    pc_id.into_inner()
+async fn list_systems() -> Result<HttpResponse, Error> {
+    Ok(HttpResponse::Ok().body("list"))
 }
 
-async fn post_sys_info(snapshot: Json<models::SysInfoSnapshot>) -> impl Responder {
+async fn get_sys_info_page(
+    pc_id: Path<String>,
+    params: Query<PageParams>,
+) -> Result<HttpResponse, Error> {
+    println!("{} {}", params.size, params.index);
+    println!("{}", pc_id.into_inner());
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+async fn post_sys_info(snapshot: Json<models::SysInfoSnapshot>) -> Result<HttpResponse, Error> {
     println!("{:?}", snapshot);
-    "post works"
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[actix_rt::main]

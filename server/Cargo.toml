@@ -11,5 +11,5 @@ actix-web = "2.0.0"
 actix-rt = "1.0.0"
 dotenv = "0.15.0"
 env_logger = "0.7.1"
-diesel = {version = "1.4.3", features = ["postgres"]}
+diesel = {version = "1.4.3", features = ["postgres", "r2d2"]}
 serde = "1.0.104"
