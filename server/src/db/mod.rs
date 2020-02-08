@@ -58,3 +58,11 @@ pub fn fetch_log_page_by_name(
         page_count,
     }))
 }
+
+pub fn delete_sys_log_by_name(name: &str, connection: &PgConnection) -> Result<(), DbError> {
+    use crate::db::schema::entries::dsl::*;
+
+    diesel::delete(entries.filter(pc_name.eq(name))).execute(connection)?;
+
+    Ok(())
+}

@@ -63,9 +63,23 @@ async fn get_sys_info_page(
 
 async fn clear_sys_entries(
     pool: web::Data<DbPool>,
-    pc_id: web::Path<String>,
+    pc_name: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
-    Ok(HttpResponse::Ok().finish())
+    let pc_name = pc_name.into_inner();
+    if pc_name.is_empty() {
+        return Ok(HttpResponse::BadRequest().body("Empty sys name"));
+    }
+    let connection = pool.get().map_err(|e| {
+        eprintln!("{}", e);
+        HttpResponse::InternalServerError().finish();
+    })?;
+    web::block(move || db::delete_sys_log_by_name(&pc_name, &connection))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish();
+        })?;
+    Ok(HttpResponse::NoContent().finish())
 }
 
 async fn post_sys_info(
