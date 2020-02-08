@@ -1,18 +1,17 @@
 #[macro_use]
 extern crate diesel;
+
 mod db;
 mod models;
+mod schema;
 
 use actix_web::{
     middleware,
     web::{self, delete, get, post, resource, scope},
     App, Error, HttpResponse, HttpServer,
 };
-use diesel::prelude::*;
-use diesel::r2d2::{self, ConnectionManager};
+use db::DbPool;
 use serde::Deserialize;
-
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[derive(Deserialize)]
 struct PageParams {
@@ -21,14 +20,9 @@ struct PageParams {
 }
 
 async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
-    let connection = pool.get().expect("Could not acquire connection");
-
-    let systems = web::block(move || db::list_systems(&connection))
+    let systems = web::block(move || db::list_systems(&pool))
         .await
-        .map_err(|e| {
-            eprintln!("{}", e);
-            HttpResponse::InternalServerError().finish();
-        })?;
+        .map_err(|e| eprintln!("{}", e))?;
 
     Ok(HttpResponse::Ok().json(systems))
 }
@@ -39,21 +33,11 @@ async fn get_sys_info_page(
     params: web::Query<PageParams>,
 ) -> Result<HttpResponse, Error> {
     let pc_name = pc_name.into_inner();
-    let connection = pool.get().expect("Could not acquire connection");
-
     let result = web::block(move || {
-        db::fetch_log_page_by_name(
-            &pc_name,
-            params.size as i64,
-            params.index as i64,
-            &connection,
-        )
+        db::fetch_log_page_by_name(&pc_name, params.size as i64, params.index as i64, &pool)
     })
     .await
-    .map_err(|e| {
-        eprintln!("{}", e);
-        HttpResponse::InternalServerError().finish();
-    })?;
+    .map_err(|e| eprintln!("{}", e))?;
 
     match result {
         Some(sys_log) => Ok(HttpResponse::Ok().json(sys_log)),
@@ -69,16 +53,9 @@ async fn clear_sys_entries(
     if pc_name.is_empty() {
         return Ok(HttpResponse::BadRequest().body("Empty sys name"));
     }
-    let connection = pool.get().map_err(|e| {
-        eprintln!("{}", e);
-        HttpResponse::InternalServerError().finish();
-    })?;
-    web::block(move || db::delete_sys_log_by_name(&pc_name, &connection))
+    web::block(move || db::delete_sys_log_by_name(&pc_name, &pool))
         .await
-        .map_err(|e| {
-            eprintln!("{}", e);
-            HttpResponse::InternalServerError().finish();
-        })?;
+        .map_err(|e| eprintln!("{}", e))?;
     Ok(HttpResponse::NoContent().finish())
 }
 
@@ -87,14 +64,10 @@ async fn post_sys_info(
     snapshot: web::Json<models::SysInfoSnapshotDto>,
 ) -> Result<HttpResponse, Error> {
     let snapshot = snapshot.into_inner();
-    let connection = pool.get().expect("Could not acquire connection");
 
-    web::block(move || db::insert_new_entry(snapshot, &connection))
+    web::block(move || db::insert_new_entry(snapshot, &pool))
         .await
-        .map_err(|e| {
-            eprintln!("{}", e);
-            HttpResponse::InternalServerError().finish();
-        })?;
+        .map_err(|e| eprintln!("{}", e))?;
 
     Ok(HttpResponse::Ok().body("Post successful"))
 }
@@ -106,10 +79,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
     let connection_url = std::env::var("DATABASE_URL").expect("Database URL not found");
-    let connection_manager = ConnectionManager::<PgConnection>::new(connection_url);
-    let connection_pool = r2d2::Pool::builder()
-        .build(connection_manager)
-        .expect("Could not create db pool");
+    let connection_pool = db::create_db_pool(&connection_url).expect("Failed to create db pool");
 
     HttpServer::new(move || {
         App::new()
