@@ -83,22 +83,35 @@ fn main() {
             println!("Clicked!");
         });
 
-        let boxy = gtk::BoxBuilder::new()
-            .orientation(gtk::Orientation::Vertical)
-            .build();
-        window.add(&boxy);
-
         let system = System::new();
+
+        let outer_box = gtk::BoxBuilder::new()
+            .orientation(gtk::Orientation::Horizontal)
+            .expand(true)
+            .build();
+        window.add(&outer_box);
 
         let bars: Vec<gtk::LevelBar> = system
             .get_processors()
-            .iter()
-            .map(|processor| {
-                let builder = gtk::LevelBarBuilder::new();
-                let bar = builder.min_value(0_f64).max_value(100_f64).build();
-                boxy.add(&bar);
+            .chunks(4)
+            .flat_map(|processors_chunk| {
+                let inner_box = gtk::BoxBuilder::new()
+                    .orientation(gtk::Orientation::Vertical)
+                    .expand(true)
+                    .build();
+                outer_box.add(&inner_box);
 
-                bar
+                processors_chunk.iter().map(move |_| {
+                    let builder = gtk::LevelBarBuilder::new();
+                    let bar = builder
+                        .min_value(0_f64)
+                        .max_value(100_f64)
+                        .height_request(30)
+                        .build();
+                    inner_box.add(&bar);
+
+                    bar
+                })
             })
             .collect();
 
