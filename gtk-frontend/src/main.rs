@@ -1,7 +1,7 @@
-extern crate gio;
-extern crate gtk;
 #[macro_use]
 extern crate glib;
+
+mod ui;
 
 use gio::prelude::*;
 use gtk::prelude::*;
@@ -11,6 +11,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use sysinfo::{ProcessorExt, System, SystemExt};
+
+use crate::ui::content::Content;
+use crate::ui::header::Header;
 
 type BarRefs = Rc<RefCell<Vec<gtk::LevelBar>>>;
 
@@ -45,44 +48,51 @@ fn main() {
 
     application.connect_activate(|app| {
         let window = ApplicationWindow::new(app);
-        window.set_title("rtop");
         window.set_default_size(800, 500);
 
-        let system = System::new();
+        let header = Header::new();
+        window.set_titlebar(Some(&header.container));
 
-        let outer_box = gtk::BoxBuilder::new()
-            .orientation(gtk::Orientation::Horizontal)
-            .expand(true)
-            .build();
-        window.add(&outer_box);
+        let content = Content::new();
+        header.stack_switch.set_stack(Some(&content.stack));
 
-        let bars: Vec<gtk::LevelBar> = system
-            .get_processors()
-            .chunks(4)
-            .flat_map(|processors_chunk| {
-                let inner_box = gtk::BoxBuilder::new()
-                    .orientation(gtk::Orientation::Vertical)
-                    .expand(true)
-                    .build();
-                outer_box.add(&inner_box);
+        window.add(&content.stack);
 
-                processors_chunk.iter().map(move |_| {
-                    let builder = gtk::LevelBarBuilder::new();
-                    let bar = builder
-                        .min_value(0_f64)
-                        .max_value(100_f64)
-                        .height_request(30)
-                        .build();
-                    inner_box.add(&bar);
+        // let system = System::new();
 
-                    bar
-                })
-            })
-            .collect();
+        // let outer_box = gtk::BoxBuilder::new()
+        //     .orientation(gtk::Orientation::Horizontal)
+        //     .expand(true)
+        //     .build();
+        // window.add(&outer_box);
 
-        let system = Rc::new(RefCell::new(system));
-        let bar_refs = Rc::new(RefCell::new(bars));
-        setup_processors_interval(1000, &system, &bar_refs);
+        // let bars: Vec<gtk::LevelBar> = system
+        //     .get_processors()
+        //     .chunks(4)
+        //     .flat_map(|processors_chunk| {
+        //         let inner_box = gtk::BoxBuilder::new()
+        //             .orientation(gtk::Orientation::Vertical)
+        //             .expand(true)
+        //             .build();
+        //         outer_box.add(&inner_box);
+
+        //         processors_chunk.iter().map(move |_| {
+        //             let builder = gtk::LevelBarBuilder::new();
+        //             let bar = builder
+        //                 .min_value(0_f64)
+        //                 .max_value(100_f64)
+        //                 .height_request(30)
+        //                 .build();
+        //             inner_box.add(&bar);
+
+        //             bar
+        //         })
+        //     })
+        //     .collect();
+
+        // let system = Rc::new(RefCell::new(system));
+        // let bar_refs = Rc::new(RefCell::new(bars));
+        // setup_processors_interval(1000, &system, &bar_refs);
 
         window.show_all();
     });
