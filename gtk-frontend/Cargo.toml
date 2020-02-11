@@ -8,10 +8,8 @@ edition = "2018"
 
 [dependencies]
 sysinfo = "0.11.1"
-rand = "0.7.3"
-gdk = "0.12.0"
-cairo = "0.0.4"
 glib = "0.9.1"
+
 [dependencies.gtk]
 version = "0.8.0"
 features = ["v3_16"]

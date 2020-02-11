@@ -6,43 +6,13 @@ extern crate glib;
 use gio::prelude::*;
 use gtk::prelude::*;
 
-use gtk::{Application, ApplicationWindow, Button, Label};
+use gtk::{Application, ApplicationWindow};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use sysinfo::{ProcessorExt, System, SystemExt};
 
 type BarRefs = Rc<RefCell<Vec<gtk::LevelBar>>>;
-
-pub fn setup_system_interval(
-    refresh_time: u32,
-    system: &Rc<RefCell<sysinfo::System>>,
-    label: &Rc<RefCell<Label>>,
-) {
-    gtk::timeout_add(
-        refresh_time,
-        clone!(@strong system, @strong label => @default-return glib::Continue(true), move || {
-            let mut system = system.borrow_mut();
-            let label = label.borrow();
-
-            system.refresh_system();
-            let cpu_usage =
-                system
-                    .get_processors()
-                    .iter()
-                    .fold(String::new(), |mut acc, processor| {
-                        acc.push_str(&format!("{}: {:.2}%\n", processor.get_name(), processor.get_cpu_usage() * 100_f32));
-                        acc
-                    });
-            label.set_label(&cpu_usage);
-
-            // println!("{}",&cpu_usage);
-
-            glib::Continue(true)
-            }
-        ),
-    );
-}
 
 pub fn setup_processors_interval(
     refresh_time: u32,
@@ -76,12 +46,7 @@ fn main() {
     application.connect_activate(|app| {
         let window = ApplicationWindow::new(app);
         window.set_title("rtop");
-        window.set_default_size(400, 200);
-
-        let button = Button::new_with_label("Click me!");
-        button.connect_clicked(|_| {
-            println!("Clicked!");
-        });
+        window.set_default_size(800, 500);
 
         let system = System::new();
 
@@ -117,15 +82,7 @@ fn main() {
 
         let system = Rc::new(RefCell::new(system));
         let bar_refs = Rc::new(RefCell::new(bars));
-        // let label = Label::new_with_mnemonic(Some("&cpu_usage"));
-        // window.add(&label);
-        // let label_refc = Rc::new(RefCell::new(label));
-
         setup_processors_interval(1000, &system, &bar_refs);
-
-        // println!("{:?}", system);
-
-        // window.add(&button);
 
         window.show_all();
     });
