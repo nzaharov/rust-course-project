@@ -1,5 +1,6 @@
 use crate::ui::dashboard::Dashboard;
 use crate::ui::logs::Logs;
+use crate::ui::Refresh;
 use gtk::prelude::*;
 use gtk::StackBuilder;
 
@@ -27,5 +28,11 @@ impl Content {
             dashboard,
             logs,
         }
+    }
+}
+
+impl Refresh for Content {
+    fn refresh(&self, system: &sysinfo::System) {
+        self.dashboard.refresh(system);
     }
 }

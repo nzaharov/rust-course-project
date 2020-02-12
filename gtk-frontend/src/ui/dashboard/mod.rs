@@ -1,5 +1,6 @@
 use gtk::prelude::*;
 mod processors;
+use crate::ui::Refresh;
 use processors::Processors;
 
 pub struct Dashboard {
@@ -17,6 +18,15 @@ impl Dashboard {
         let processors = Processors::new(8);
         container.add(&processors.container);
 
-        Dashboard { container, processors }
+        Dashboard {
+            container,
+            processors,
+        }
+    }
+}
+
+impl Refresh for Dashboard {
+    fn refresh(&self, system: &sysinfo::System) {
+        self.processors.refresh(system);
     }
 }

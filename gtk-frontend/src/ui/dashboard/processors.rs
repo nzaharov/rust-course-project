@@ -1,4 +1,6 @@
+use crate::ui::Refresh;
 use gtk::prelude::*;
+use sysinfo::{ProcessorExt, SystemExt};
 
 pub struct Processors {
     pub container: gtk::Box,
@@ -40,5 +42,18 @@ impl Processors {
             container,
             processors,
         }
+    }
+}
+
+impl Refresh for Processors {
+    fn refresh(&self, system: &sysinfo::System) {
+        let processors = system.get_processors();
+
+        self.processors
+            .iter()
+            .zip(processors.iter())
+            .for_each(|(bar, processor)| {
+                bar.set_value(processor.get_cpu_usage() as f64);
+            });
     }
 }

@@ -14,6 +14,7 @@ use sysinfo::{ProcessorExt, System, SystemExt};
 
 use crate::ui::content::Content;
 use crate::ui::header::Header;
+use crate::ui::Refresh;
 
 type BarRefs = Rc<RefCell<Vec<gtk::LevelBar>>>;
 
@@ -42,6 +43,27 @@ pub fn setup_processors_interval(
     );
 }
 
+pub fn test_loop(
+    refresh_time: u32,
+    system: &Rc<RefCell<sysinfo::System>>,
+    content: &Rc<RefCell<Content>>,
+) {
+    gtk::timeout_add(
+        refresh_time,
+        clone!(@strong system, @strong content => @default-return glib::Continue(true), move || {
+            let content = content.borrow();
+            let mut system = system.borrow_mut();
+
+            system.refresh_system();
+
+            content.refresh(&system);
+
+            glib::Continue(true)
+            }
+        ),
+    );
+}
+
 fn main() {
     let application = Application::new(Some("com.nzaharov.rtop"), Default::default())
         .expect("failed to initialize GTK application");
@@ -55,10 +77,11 @@ fn main() {
 
         let content = Content::new();
         header.stack_switch.set_stack(Some(&content.stack));
-
         window.add(&content.stack);
-
-        // let system = System::new();
+        let system = System::new();
+        let system = Rc::new(RefCell::new(system));
+        let content = Rc::new(RefCell::new(content));
+        test_loop(1000, &system, &content);
 
         // let outer_box = gtk::BoxBuilder::new()
         //     .orientation(gtk::Orientation::Horizontal)
@@ -90,7 +113,6 @@ fn main() {
         //     })
         //     .collect();
 
-        // let system = Rc::new(RefCell::new(system));
         // let bar_refs = Rc::new(RefCell::new(bars));
         // setup_processors_interval(1000, &system, &bar_refs);
 
