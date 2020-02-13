@@ -1,7 +1,7 @@
 use gtk::prelude::*;
 mod memory;
 mod processors;
-use crate::ui::Refresh;
+use crate::ui::{InitialState, Refresh};
 use memory::Memory;
 use processors::Processors;
 
@@ -12,7 +12,7 @@ pub struct Dashboard {
 }
 
 impl Dashboard {
-    pub fn new() -> Dashboard {
+    pub fn new(init_state: InitialState) -> Dashboard {
         let container = gtk::PanedBuilder::new()
             .wide_handle(true)
             .orientation(gtk::Orientation::Vertical)
@@ -22,8 +22,10 @@ impl Dashboard {
         let upper_container = gtk::GridBuilder::new()
             .expand(true)
             .column_homogeneous(true)
+            .row_spacing(6)
+            .column_spacing(6)
             .build();
-        let processors = Processors::new(8);
+        let processors = Processors::new(init_state.processor_count as i32);
         upper_container.attach(&processors.container, 0, 0, 2, 1);
 
         let memory = Memory::new();

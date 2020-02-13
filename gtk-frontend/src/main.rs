@@ -72,45 +72,22 @@ fn main() {
         let window = ApplicationWindow::new(app);
         window.set_default_size(800, 500);
 
-        let header = Header::new();
-        window.set_titlebar(Some(&header.container));
-
-        let content = Content::new();
-        header.stack_switch.set_stack(Some(&content.stack));
-        window.add(&content.stack);
         let system = System::new_with_specifics(
             RefreshKind::new().with_memory().with_cpu().with_processes(),
         );
+
+        let header = Header::new();
+        window.set_titlebar(Some(&header.container));
+
+        let content = Content::new(ui::InitialState {
+            processor_count: system.get_processors().len(),
+        });
+        header.stack_switch.set_stack(Some(&content.stack));
+        window.add(&content.stack);
+
         let system = Rc::new(RefCell::new(system));
         let content = Rc::new(RefCell::new(content));
         test_loop(1000, &system, &content);
-        
-        // let bars: Vec<gtk::LevelBar> = system
-        //     .get_processors()
-        //     .chunks(4)
-        //     .flat_map(|processors_chunk| {
-        //         let inner_box = gtk::BoxBuilder::new()
-        //             .orientation(gtk::Orientation::Vertical)
-        //             .expand(true)
-        //             .build();
-        //         outer_box.add(&inner_box);
-
-        //         processors_chunk.iter().map(move |_| {
-        //             let builder = gtk::LevelBarBuilder::new();
-        //             let bar = builder
-        //                 .min_value(0_f64)
-        //                 .max_value(100_f64)
-        //                 .height_request(30)
-        //                 .build();
-        //             inner_box.add(&bar);
-
-        //             bar
-        //         })
-        //     })
-        //     .collect();
-
-        // let bar_refs = Rc::new(RefCell::new(bars));
-        // setup_processors_interval(1000, &system, &bar_refs);
 
         window.show_all();
     });

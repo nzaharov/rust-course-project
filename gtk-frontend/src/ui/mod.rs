@@ -6,3 +6,7 @@ mod logs;
 pub trait Refresh {
     fn refresh(&self, system: &sysinfo::System);
 }
+
+pub struct InitialState {
+    pub processor_count: usize,
+}

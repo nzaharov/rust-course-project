@@ -1,6 +1,6 @@
 use crate::ui::dashboard::Dashboard;
 use crate::ui::logs::Logs;
-use crate::ui::Refresh;
+use crate::ui::{InitialState, Refresh};
 use gtk::prelude::*;
 use gtk::StackBuilder;
 
@@ -11,13 +11,13 @@ pub struct Content {
 }
 
 impl Content {
-    pub fn new() -> Content {
+    pub fn new(init_state: InitialState) -> Content {
         let stack = StackBuilder::new()
             .transition_type(gtk::StackTransitionType::SlideLeftRight)
             .transition_duration(100)
             .build();
 
-        let dashboard = Dashboard::new();
+        let dashboard = Dashboard::new(init_state);
         stack.add_titled(&dashboard.container, "dashboard", "Dashboard");
 
         let logs = Logs::new();
