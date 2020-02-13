@@ -10,7 +10,7 @@ use gtk::{Application, ApplicationWindow};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use sysinfo::{ProcessorExt, System, SystemExt};
+use sysinfo::{ProcessorExt, RefreshKind, System, SystemExt};
 
 use crate::ui::content::Content;
 use crate::ui::header::Header;
@@ -78,17 +78,13 @@ fn main() {
         let content = Content::new();
         header.stack_switch.set_stack(Some(&content.stack));
         window.add(&content.stack);
-        let system = System::new();
+        let system = System::new_with_specifics(
+            RefreshKind::new().with_memory().with_cpu().with_processes(),
+        );
         let system = Rc::new(RefCell::new(system));
         let content = Rc::new(RefCell::new(content));
         test_loop(1000, &system, &content);
-
-        // let outer_box = gtk::BoxBuilder::new()
-        //     .orientation(gtk::Orientation::Horizontal)
-        //     .expand(true)
-        //     .build();
-        // window.add(&outer_box);
-
+        
         // let bars: Vec<gtk::LevelBar> = system
         //     .get_processors()
         //     .chunks(4)
