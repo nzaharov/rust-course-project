@@ -1,3 +1,4 @@
+mod common;
 pub mod content;
 mod dashboard;
 pub mod header;

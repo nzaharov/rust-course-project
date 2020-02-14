@@ -1,10 +1,11 @@
+use crate::ui::common::labeledbar::LabeledBar;
 use crate::ui::Refresh;
 use gtk::prelude::*;
 use sysinfo::{ProcessorExt, SystemExt};
 
 pub struct Processors {
     pub container: gtk::Box,
-    pub processors: Vec<gtk::LevelBar>,
+    pub processors: Vec<LabeledBar>,
 }
 
 impl Processors {
@@ -17,26 +18,23 @@ impl Processors {
         let processors = (0..processor_count)
             .collect::<Vec<_>>()
             .chunks(4)
-            .flat_map(|processors_chunk| {
+            .enumerate()
+            .flat_map(|(_, processors_chunk)| {
                 let inner_box = gtk::BoxBuilder::new()
                     .orientation(gtk::Orientation::Vertical)
                     .expand(true)
                     .build();
                 container.add(&inner_box);
 
-                processors_chunk.iter().map(move |_| {
-                    let builder = gtk::LevelBarBuilder::new();
-                    let bar = builder
-                        .min_value(0_f64)
-                        .max_value(100_f64)
-                        .height_request(30)
-                        .build();
-                    inner_box.add(&bar);
+                processors_chunk.iter().map(move |i| {
+                    let bar = LabeledBar::new(&(i + 1).to_string());
+                    bar.set_max_value(100_f64);
+                    inner_box.add(&bar.container);
 
                     bar
                 })
             })
-            .collect::<Vec<gtk::LevelBar>>();
+            .collect::<Vec<LabeledBar>>();
 
         Processors {
             container,

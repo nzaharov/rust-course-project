@@ -1,6 +1,6 @@
 use crate::ui::Refresh;
 use gtk::prelude::*;
-use gtk::{ListStore, TreeView, TreeViewBuilder, TreeViewColumn, TreeViewColumnBuilder};
+use gtk::{ListStore, TreeView, TreeViewBuilder, TreeViewColumnBuilder};
 use sysinfo::{ProcessExt, SystemExt};
 
 pub struct Processes {

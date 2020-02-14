@@ -25,7 +25,7 @@ impl Dashboard {
         let upper_container = gtk::GridBuilder::new()
             .expand(true)
             .column_homogeneous(true)
-            .row_spacing(6)
+            .row_spacing(7)
             .column_spacing(6)
             .build();
         let processors = Processors::new(init_state.processor_count as i32);
