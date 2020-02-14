@@ -10,40 +10,13 @@ use gtk::{Application, ApplicationWindow};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use sysinfo::{ProcessorExt, RefreshKind, System, SystemExt};
+use sysinfo::{RefreshKind, System, SystemExt};
 
 use crate::ui::content::Content;
 use crate::ui::header::Header;
 use crate::ui::Refresh;
 
-type BarRefs = Rc<RefCell<Vec<gtk::LevelBar>>>;
-
-pub fn setup_processors_interval(
-    refresh_time: u32,
-    system: &Rc<RefCell<sysinfo::System>>,
-    bar_refs: &BarRefs,
-) {
-    gtk::timeout_add(
-        refresh_time,
-        clone!(@strong system, @strong bar_refs => @default-return glib::Continue(true), move || {
-            let mut system = system.borrow_mut();
-            let bars = bar_refs.borrow();
-
-            system.refresh_system();
-
-            let processors = system.get_processors();
-
-            bars.iter().zip(processors.iter()).for_each(|(bar,processor)| {
-                bar.set_value(processor.get_cpu_usage() as f64);
-            });
-
-            glib::Continue(true)
-            }
-        ),
-    );
-}
-
-pub fn test_loop(
+pub fn system_loop(
     refresh_time: u32,
     system: &Rc<RefCell<sysinfo::System>>,
     content: &Rc<RefCell<Content>>,
@@ -87,7 +60,7 @@ fn main() {
 
         let system = Rc::new(RefCell::new(system));
         let content = Rc::new(RefCell::new(content));
-        test_loop(1000, &system, &content);
+        system_loop(1000, &system, &content);
 
         window.show_all();
     });

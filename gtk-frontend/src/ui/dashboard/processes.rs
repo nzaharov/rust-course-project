@@ -68,18 +68,20 @@ impl Refresh for Processes {
         self.tree_model.clear();
 
         for (pid, process) in processes_list.iter() {
-            self.tree_model.insert_with_values(
-                None,
-                &[0, 1, 2, 3, 4, 5],
-                &[
-                    pid,
-                    &extract_username(process.environ()),
-                    &format!("{:?}", process.status()),
-                    &format!("{:.1}", process.cpu_usage()),
-                    &process.memory(),
-                    &process.name(),
-                ],
-            );
+            if process.cmd().len() != 0 {
+                self.tree_model.insert_with_values(
+                    None,
+                    &[0, 1, 2, 3, 4, 5],
+                    &[
+                        pid,
+                        &extract_username(process.environ()),
+                        &format!("{:?}", process.status()),
+                        &format!("{:.1}", process.cpu_usage()),
+                        &process.memory(),
+                        &process.cmd().join(" "),
+                    ],
+                );
+            }
         }
     }
 }
