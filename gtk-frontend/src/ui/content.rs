@@ -17,6 +17,10 @@ impl Content {
             .transition_duration(100)
             .build();
 
+        stack.connect_property_visible_child_notify(|r| {
+            println!("{:?}", r.get_visible_child_name().unwrap().as_str());
+        });
+
         let dashboard = Dashboard::new(init_state);
         stack.add_titled(&dashboard.container, "dashboard", "Dashboard");
 

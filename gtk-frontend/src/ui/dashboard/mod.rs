@@ -1,8 +1,10 @@
 use gtk::prelude::*;
+mod load;
 mod memory;
 mod processes;
 mod processors;
 use crate::ui::{InitialState, Refresh};
+use load::Load;
 use memory::Memory;
 use processes::Processes;
 use processors::Processors;
@@ -12,6 +14,7 @@ pub struct Dashboard {
     pub processors: Processors,
     pub memory: Memory,
     pub processes: Processes,
+    pub load: Load,
 }
 
 impl Dashboard {
@@ -34,8 +37,15 @@ impl Dashboard {
         let memory = Memory::new();
         upper_container.attach(&memory.container, 0, 1, 1, 1);
 
-        let temp_label2 = gtk::LabelBuilder::new().label("Usage placeholder").build();
-        upper_container.attach(&temp_label2, 1, 1, 1, 1);
+        let usage_stats = gtk::BoxBuilder::new()
+            .expand(true)
+            .orientation(gtk::Orientation::Vertical)
+            .build();
+
+        let load = Load::new();
+        usage_stats.add(&load.container);
+        
+        upper_container.attach(&usage_stats, 1, 1, 1, 1);
 
         let processes = Processes::new();
 
@@ -47,6 +57,7 @@ impl Dashboard {
             processors,
             memory,
             processes,
+            load,
         }
     }
 }
@@ -56,5 +67,6 @@ impl Refresh for Dashboard {
         self.processors.refresh(system);
         self.memory.refresh(system);
         self.processes.refresh(system);
+        self.load.refresh(system);
     }
 }
