@@ -1,6 +1,7 @@
 use crate::ui::Refresh;
 use gtk::prelude::*;
 use gtk::{ListStore, TreeView, TreeViewBuilder, TreeViewColumn, TreeViewColumnBuilder};
+use sysinfo::{ProcessExt, SystemExt};
 
 pub struct Processes {
     pub container: gtk::ScrolledWindow,
@@ -9,25 +10,35 @@ pub struct Processes {
 
 impl Processes {
     pub fn new() -> Self {
-        let tree_model = ListStore::new(&[u32::static_type(), String::static_type()]);
+        let column_names = [
+            "PID",
+            "User ID",
+            "Status",
+            "CPU%",
+            "MEM KiB",
+            "Process Name",
+        ];
+        let column_types = [
+            u32::static_type(),
+            String::static_type(),
+            String::static_type(),
+            String::static_type(),
+            u32::static_type(),
+            String::static_type(),
+        ];
+
+        let tree_model = ListStore::new(&column_types);
         let tree_view = TreeViewBuilder::new()
             .expand(true)
             .headers_visible(true)
             .enable_grid_lines(gtk::TreeViewGridLines::Vertical)
             .build();
 
-        let column_pid = TreeViewColumnBuilder::new().title("PID").build(); // TODO: export column creation in method
-        let cell1 = gtk::CellRendererText::new();
-        column_pid.pack_start(&cell1, true);
-        column_pid.add_attribute(&cell1, "text", 0);
+        column_names
+            .iter()
+            .enumerate()
+            .for_each(|(i, column)| Self::append_column(&tree_view, column, i as i32));
 
-        let column_name = TreeViewColumnBuilder::new().title("Command").build();
-        let cell2 = gtk::CellRendererText::new();
-        column_name.pack_start(&cell2, true);
-        column_name.add_attribute(&cell2, "text", 1);
-
-        tree_view.append_column(&column_pid);
-        tree_view.append_column(&column_name);
         tree_view.set_model(Some(&tree_model));
 
         let container = gtk::ScrolledWindowBuilder::new()
@@ -40,53 +51,45 @@ impl Processes {
             tree_model,
         }
     }
+
+    fn append_column(tree_view: &TreeView, column_name: &str, column_index: i32) {
+        let column = TreeViewColumnBuilder::new().title(column_name).build(); // TODO: export column creation in method
+        let cell = gtk::CellRendererText::new();
+        column.pack_start(&cell, true);
+        column.add_attribute(&cell, "text", column_index);
+
+        tree_view.append_column(&column);
+    }
 }
 
 impl Refresh for Processes {
     fn refresh(&self, system: &sysinfo::System) {
-        let entries = &[
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-            "Michel",
-            "Sara",
-            "Liam",
-            "Zelda",
-            "Neo",
-            "Octopus master",
-        ];
+        let processes_list = system.get_processes();
         self.tree_model.clear();
 
-        for (i, entry) in entries.iter().enumerate() {
-            self.tree_model
-                .insert_with_values(None, &[0, 1], &[&(i as u32 + 1), &entry]);
+        for (pid, process) in processes_list.iter() {
+            self.tree_model.insert_with_values(
+                None,
+                &[0, 1, 2, 3, 4, 5],
+                &[
+                    pid,
+                    &extract_username(process.environ()),
+                    &format!("{:?}", process.status()),
+                    &format!("{:.1}", process.cpu_usage()),
+                    &process.memory(),
+                    &process.name(),
+                ],
+            );
         }
     }
+}
+
+fn extract_username(environ: &[String]) -> String {
+    let user = environ.get(17);
+    let user = match user {
+        Some(user) => user.split("=").nth(1).unwrap(),
+        None => "Unknown",
+    };
+
+    String::from(user)
 }
