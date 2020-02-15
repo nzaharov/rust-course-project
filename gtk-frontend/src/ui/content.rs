@@ -3,6 +3,8 @@ use crate::ui::logs::Logs;
 use crate::ui::{Refresh, State};
 use gtk::prelude::*;
 use gtk::StackBuilder;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct Content {
     pub stack: gtk::Stack,
@@ -11,7 +13,7 @@ pub struct Content {
 }
 
 impl Content {
-    pub fn new(state: &State) -> Content {
+    pub fn new(state: &Rc<RefCell<State>>) -> Content {
         let stack = StackBuilder::new()
             .transition_type(gtk::StackTransitionType::SlideLeftRight)
             .transition_duration(100)
@@ -28,7 +30,7 @@ impl Content {
             println!("{:?}", r.get_visible_child_name().unwrap().as_str());
         });
 
-        let dashboard = Dashboard::new(&state);
+        let dashboard = Dashboard::new(state);
         stack.add_titled(&dashboard.container, "dashboard", "Dashboard");
 
         let logs = Logs::new();

@@ -4,6 +4,9 @@ mod settings;
 use crate::ui::State;
 use settings::Settings;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 pub struct Header {
     pub container: gtk::HeaderBar,
     pub stack_switch: gtk::StackSwitcher,
@@ -11,7 +14,7 @@ pub struct Header {
 }
 
 impl Header {
-    pub fn new(state: &mut State) -> Header {
+    pub fn new(state: &Rc<RefCell<State>>) -> Header {
         let container = HeaderBarBuilder::new().show_close_button(true).build();
 
         let stack_switch = StackSwitcherBuilder::new().build();

@@ -11,7 +11,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new(state: &mut State) -> Self {
+    pub fn new(state: &Rc<RefCell<State>>) -> Self {
         let menu_button = gtk::MenuButtonBuilder::new()
             .use_popover(true)
             .tooltip_text("Settings")
@@ -28,12 +28,14 @@ impl Settings {
             .label("Logging disabled")
             .build();
 
-        logging_check.connect_toggled(|button| {
+        let state_cpy = state.clone();
+        logging_check.connect_toggled(move |button| {
+            let mut state = state_cpy.borrow_mut();
+            state.toggle_logging();
             match button.get_active() {
                 true => button.set_label("Logging enabled"),
                 false => button.set_label("Logging disabled")
             };
-            // state.toggle_logging();
         });
         
         let field_container = gtk::BoxBuilder::new()
@@ -41,6 +43,12 @@ impl Settings {
             .build();
         let label = gtk::LabelBuilder::new().label("Name: ").build();
         let pc_name = gtk::EntryBuilder::new().build();
+        let state_cpy = state.clone();
+        pc_name.connect_activate(move |entry| {
+            let mut state = state_cpy.borrow_mut();
+            state.set_name(entry.get_text().unwrap().as_str());
+        });
+
         field_container.add(&label);
         field_container.add(&pc_name);
         

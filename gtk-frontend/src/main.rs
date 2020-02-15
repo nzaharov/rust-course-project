@@ -60,9 +60,10 @@ fn main() {
             RefreshKind::new().with_memory().with_cpu().with_processes(),
         );
 
-        let mut state = ui::State::new(system.get_processors().len());
+        let state = ui::State::new(system.get_processors().len());
+        let state = Rc::new(RefCell::new(state));
 
-        let header = Header::new(&mut state);
+        let header = Header::new(&state);
         window.set_titlebar(Some(&header.container));
 
         let content = Content::new(&state);
@@ -70,7 +71,6 @@ fn main() {
         window.add(&content.stack);
 
         let system = Rc::new(RefCell::new(system));
-        let state = Rc::new(RefCell::new(state));
         let content = Rc::new(RefCell::new(content));
         system_loop(1500, &system, &state, &content);
 

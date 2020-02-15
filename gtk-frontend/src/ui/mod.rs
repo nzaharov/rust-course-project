@@ -8,6 +8,7 @@ pub trait Refresh {
     fn refresh(&self, system: &sysinfo::System);
 }
 
+#[derive(Debug)]
 pub struct State {
     pub processor_count: usize,
     pub logging_on: bool,
@@ -25,5 +26,9 @@ impl State {
 
     pub fn toggle_logging(&mut self) {
         self.logging_on = !self.logging_on;
+    }
+
+    pub fn set_name(&mut self, text: &str) {
+        self.pc_name = String::from(text);
     }
 }

@@ -3,11 +3,13 @@ mod load;
 mod memory;
 mod processes;
 mod processors;
-use crate::ui::{State, Refresh};
+use crate::ui::{Refresh, State};
 use load::Load;
 use memory::Memory;
 use processes::Processes;
 use processors::Processors;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct Dashboard {
     pub container: gtk::Paned,
@@ -18,7 +20,8 @@ pub struct Dashboard {
 }
 
 impl Dashboard {
-    pub fn new(state: &State) -> Dashboard {
+    pub fn new(state: &Rc<RefCell<State>>) -> Dashboard {
+        let state = state.borrow();
         let container = gtk::PanedBuilder::new()
             .wide_handle(true)
             .orientation(gtk::Orientation::Vertical)
