@@ -8,6 +8,12 @@ pub trait Refresh {
     fn refresh(&self, system: &sysinfo::System);
 }
 
-pub struct InitialState {
+pub struct State {
     pub processor_count: usize,
+}
+
+impl State {
+    pub fn new(processor_count: usize) -> Self {
+        Self { processor_count }
+    }
 }

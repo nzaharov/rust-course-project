@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate glib;
 
+mod http;
 mod ui;
 
 use gio::prelude::*;
@@ -27,6 +28,12 @@ pub fn system_loop(
             let content = content.borrow();
             let mut system = system.borrow_mut();
 
+            gtk::timeout_add(0, || {
+                let list = http::get_sys_list().ok();
+                println!("{:?}", list);
+                glib::Continue(false)
+            });
+
             system.refresh_system();
 
             content.refresh(&system);
@@ -49,18 +56,18 @@ fn main() {
             RefreshKind::new().with_memory().with_cpu().with_processes(),
         );
 
+        let state = ui::State::new(system.get_processors().len());
+
         let header = Header::new();
         window.set_titlebar(Some(&header.container));
 
-        let content = Content::new(ui::InitialState {
-            processor_count: system.get_processors().len(),
-        });
+        let content = Content::new(&state);
         header.stack_switch.set_stack(Some(&content.stack));
         window.add(&content.stack);
 
         let system = Rc::new(RefCell::new(system));
         let content = Rc::new(RefCell::new(content));
-        system_loop(1000, &system, &content);
+        system_loop(1500, &system, &content);
 
         window.show_all();
     });

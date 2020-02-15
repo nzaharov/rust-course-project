@@ -3,7 +3,7 @@ mod load;
 mod memory;
 mod processes;
 mod processors;
-use crate::ui::{InitialState, Refresh};
+use crate::ui::{State, Refresh};
 use load::Load;
 use memory::Memory;
 use processes::Processes;
@@ -18,7 +18,7 @@ pub struct Dashboard {
 }
 
 impl Dashboard {
-    pub fn new(init_state: InitialState) -> Dashboard {
+    pub fn new(state: &State) -> Dashboard {
         let container = gtk::PanedBuilder::new()
             .wide_handle(true)
             .orientation(gtk::Orientation::Vertical)
@@ -31,7 +31,7 @@ impl Dashboard {
             .row_spacing(7)
             .column_spacing(6)
             .build();
-        let processors = Processors::new(init_state.processor_count as i32);
+        let processors = Processors::new(state.processor_count as i32);
         upper_container.attach(&processors.container, 0, 0, 2, 1);
 
         let memory = Memory::new();
@@ -44,7 +44,7 @@ impl Dashboard {
 
         let load = Load::new();
         usage_stats.add(&load.container);
-        
+
         upper_container.attach(&usage_stats, 1, 1, 1, 1);
 
         let processes = Processes::new();

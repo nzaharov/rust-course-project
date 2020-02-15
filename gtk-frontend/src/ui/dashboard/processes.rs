@@ -20,7 +20,7 @@ impl Processes {
         ];
         let column_types = [
             u32::static_type(),
-            String::static_type(),
+            u32::static_type(),
             String::static_type(),
             String::static_type(),
             u32::static_type(),
@@ -74,7 +74,8 @@ impl Refresh for Processes {
                     &[0, 1, 2, 3, 4, 5],
                     &[
                         pid,
-                        &extract_username(process.environ()),
+                        // &extract_username(process.environ()),
+                        &process.uid,
                         &format!("{:?}", process.status()),
                         &format!("{:.1}", process.cpu_usage()),
                         &process.memory(),
@@ -86,12 +87,18 @@ impl Refresh for Processes {
     }
 }
 
-fn extract_username(environ: &[String]) -> String {
-    let user = environ.get(17);
-    let user = match user {
-        Some(user) => user.split("=").nth(1).unwrap(),
-        None => "Unknown",
-    };
+// fn extract_username(environ: &[String]) -> String {
+//     println!("{:?}", environ);
+//     let user = environ.iter().find(|line| {
+//         if line.len() > 9 && &line[..=8] == "USERNAME=" {
+//             return true;
+//         }
+//         false
+//     });
+//     let user = match user {
+//         Some(user) => user.split("=").nth(1).unwrap(),
+//         None => "Unknown",
+//     };
 
-    String::from(user)
-}
+//     String::from(user)
+// }
