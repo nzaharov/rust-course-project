@@ -20,19 +20,23 @@ use crate::ui::Refresh;
 pub fn system_loop(
     refresh_time: u32,
     system: &Rc<RefCell<sysinfo::System>>,
+    state: &Rc<RefCell<ui::State>>,
     content: &Rc<RefCell<Content>>,
 ) {
     gtk::timeout_add(
         refresh_time,
-        clone!(@strong system, @strong content => @default-return glib::Continue(true), move || {
+        clone!(@strong system, @strong state, @strong content => @default-return glib::Continue(true), move || {
             let content = content.borrow();
+            let state = state.borrow();
             let mut system = system.borrow_mut();
 
-            gtk::timeout_add(0, || {
-                let list = http::get_sys_list().ok();
-                println!("{:?}", list);
-                glib::Continue(false)
-            });
+            if state.logging_on && state.pc_name.len() > 2 {
+                gtk::timeout_add(0, || {
+                    let list = http::get_sys_list().ok();
+                    println!("{:?}", list);
+                    glib::Continue(false)
+                });
+            }
 
             system.refresh_system();
 
@@ -56,9 +60,9 @@ fn main() {
             RefreshKind::new().with_memory().with_cpu().with_processes(),
         );
 
-        let state = ui::State::new(system.get_processors().len());
+        let mut state = ui::State::new(system.get_processors().len());
 
-        let header = Header::new();
+        let header = Header::new(&mut state);
         window.set_titlebar(Some(&header.container));
 
         let content = Content::new(&state);
@@ -66,8 +70,9 @@ fn main() {
         window.add(&content.stack);
 
         let system = Rc::new(RefCell::new(system));
+        let state = Rc::new(RefCell::new(state));
         let content = Rc::new(RefCell::new(content));
-        system_loop(1500, &system, &content);
+        system_loop(1500, &system, &state, &content);
 
         window.show_all();
     });

@@ -10,10 +10,20 @@ pub trait Refresh {
 
 pub struct State {
     pub processor_count: usize,
+    pub logging_on: bool,
+    pub pc_name: String,
 }
 
 impl State {
     pub fn new(processor_count: usize) -> Self {
-        Self { processor_count }
+        Self {
+            processor_count,
+            logging_on: false,
+            pc_name: String::new(),
+        }
+    }
+
+    pub fn toggle_logging(&mut self) {
+        self.logging_on = !self.logging_on;
     }
 }
