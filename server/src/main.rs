@@ -14,12 +14,12 @@ use db::DbPool;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct PageParams {
+pub struct PageParams {
     size: u8,
     index: u8,
 }
 
-async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
+pub async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     let systems = web::block(move || db::list_systems(&pool))
         .await
         .map_err(|e| eprintln!("{}", e))?;
@@ -27,7 +27,7 @@ async fn get_sys_list(pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     Ok(HttpResponse::Ok().json(systems))
 }
 
-async fn get_sys_info_page(
+pub async fn get_sys_info_page(
     pool: web::Data<DbPool>,
     pc_name: web::Path<String>,
     params: web::Query<PageParams>,
@@ -45,7 +45,7 @@ async fn get_sys_info_page(
     }
 }
 
-async fn clear_sys_entries(
+pub async fn clear_sys_entries(
     pool: web::Data<DbPool>,
     pc_name: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
@@ -59,7 +59,7 @@ async fn clear_sys_entries(
     Ok(HttpResponse::NoContent().finish())
 }
 
-async fn post_sys_info(
+pub async fn post_sys_info(
     pool: web::Data<DbPool>,
     snapshot: web::Json<models::SysInfoSnapshotDto>,
 ) -> Result<HttpResponse, Error> {
