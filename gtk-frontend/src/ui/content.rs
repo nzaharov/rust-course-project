@@ -34,7 +34,7 @@ impl Content {
         stack.add_titled(&dashboard.container, "dashboard", "Dashboard");
 
         let logs = Logs::new();
-        stack.add_titled(&logs.container, "logs", "Logs");
+        stack.add_titled(logs.table.get_container(), "logs", "Logs");
 
         Content {
             stack,

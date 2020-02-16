@@ -1,19 +1,28 @@
+use crate::ui::common::table::Table;
+use crate::ui::Refresh;
 use gtk::prelude::*;
 
 pub struct Logs {
-    pub container: gtk::Box,
+    pub table: Table,
 }
 
 impl Logs {
-    pub fn new() -> Logs {
-        let container = gtk::BoxBuilder::new()
-            .orientation(gtk::Orientation::Vertical)
-            .expand(true)
-            .build();
+    pub fn new() -> Self {
+        let column_names = ["Timestamp", "CPU Usage", "RAM"];
+        let column_types = [
+            u32::static_type(),
+            String::static_type(),
+            String::static_type(),
+        ];
 
-        let test_label = gtk::LabelBuilder::new().label("lfgGFGDFgdgd").build();
-        container.add(&test_label);
+        let table = Table::new(&column_names, &column_types);
 
-        Logs { container }
+        Self { table }
+    }
+}
+
+impl Refresh for Logs {
+    fn refresh(&self, system: &sysinfo::System) {
+        unimplemented!()
     }
 }

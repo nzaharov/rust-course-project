@@ -53,7 +53,7 @@ impl Dashboard {
         let processes = Processes::new();
 
         container.add1(&upper_container);
-        container.add2(&processes.container);
+        container.add2(processes.table.get_container());
 
         Dashboard {
             container,

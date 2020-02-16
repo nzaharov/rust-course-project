@@ -1,11 +1,10 @@
+use crate::ui::common::table::Table;
 use crate::ui::Refresh;
 use gtk::prelude::*;
-use gtk::{ListStore, TreeView, TreeViewBuilder, TreeViewColumnBuilder};
 use sysinfo::{ProcessExt, SystemExt};
 
 pub struct Processes {
-    pub container: gtk::ScrolledWindow,
-    pub tree_model: ListStore,
+    pub table: Table,
 }
 
 impl Processes {
@@ -27,49 +26,20 @@ impl Processes {
             String::static_type(),
         ];
 
-        let tree_model = ListStore::new(&column_types);
-        let tree_view = TreeViewBuilder::new()
-            .expand(true)
-            .headers_visible(true)
-            .enable_grid_lines(gtk::TreeViewGridLines::Vertical)
-            .build();
+        let table = Table::new(&column_names, &column_types);
 
-        column_names
-            .iter()
-            .enumerate()
-            .for_each(|(i, column)| Self::append_column(&tree_view, column, i as i32));
-
-        tree_view.set_model(Some(&tree_model));
-
-        let container = gtk::ScrolledWindowBuilder::new()
-            .expand(true)
-            .child(&tree_view)
-            .build();
-
-        Self {
-            container,
-            tree_model,
-        }
-    }
-
-    fn append_column(tree_view: &TreeView, column_name: &str, column_index: i32) {
-        let column = TreeViewColumnBuilder::new().title(column_name).build(); // TODO: export column creation in method
-        let cell = gtk::CellRendererText::new();
-        column.pack_start(&cell, true);
-        column.add_attribute(&cell, "text", column_index);
-
-        tree_view.append_column(&column);
+        Self { table }
     }
 }
 
 impl Refresh for Processes {
     fn refresh(&self, system: &sysinfo::System) {
         let processes_list = system.get_processes();
-        self.tree_model.clear();
+        self.table.get_store().clear();
 
         for (pid, process) in processes_list.iter() {
             if process.cmd().len() != 0 {
-                self.tree_model.insert_with_values(
+                self.table.get_store().insert_with_values(
                     None,
                     &[0, 1, 2, 3, 4, 5],
                     &[
