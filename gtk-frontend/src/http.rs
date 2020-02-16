@@ -1,10 +1,18 @@
 use reqwest::blocking;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 const URL: &'static str = "http://localhost:8080/api/sysinfo";
 
 #[derive(Serialize)]
 pub struct SysInfoSnapshot {
+    pub pc_name: String,
+    pub cpu_usage: String,
+    pub mem_usage: String,
+    pub recorded_at: i64,
+}
+
+#[derive(Deserialize)]
+pub struct SysInfoSnapshotResponse {
     pub pc_name: String,
     pub cpu_usage: String,
     pub mem_usage: String,
@@ -51,6 +59,33 @@ impl HttpClient {
             .json(&snapshot)
             .send()
             .map_err(|_| "Post failed")?;
+
+        Ok(())
+    }
+
+    pub fn get_log_page(
+        &self,
+        pc_name: &str,
+        page_index: u8,
+        page_size: u8,
+    ) -> Result<Vec<SysInfoSnapshotResponse>, &'static str> {
+        let res = self
+            .client
+            .get(&format!("{}/{}", URL, pc_name))
+            .query(&[("index", page_index), ("size", page_size)])
+            .send()
+            .map_err(|_| "Get failed")?
+            .json::<Vec<SysInfoSnapshotResponse>>()
+            .map_err(|_| "Parse failed")?;
+
+        Ok(res)
+    }
+
+    pub fn delete_logs_by_name(&self, pc_name: &str) -> Result<(), &'static str> {
+        self.client
+            .delete(&format!("{}/{}", URL, pc_name))
+            .send()
+            .map_err(|_| "Delete failed")?;
 
         Ok(())
     }
