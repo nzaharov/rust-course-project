@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate diesel;
 
-mod db;
-mod models;
-mod schema;
+pub mod db;
+pub mod models;
+pub mod schema;
 
 use actix_web::{
     middleware,
@@ -104,4 +104,93 @@ async fn main() -> std::io::Result<()> {
     .bind("127.0.0.1:8080")?
     .run()
     .await
+}
+
+#[cfg(test)]
+mod endpoint_tests {
+    use crate::models::*;
+    use crate::*;
+    use actix_web::{test, web, App};
+
+    #[actix_rt::test]
+    pub async fn test_get_sys_list() {
+        dotenv::dotenv().ok();
+        let connection_url = std::env::var("DATABASE_URL_TEST").expect("Database URL not found");
+        let connection_pool =
+            db::create_db_pool(&connection_url).expect("Failed to create db pool");
+
+        let mut app = test::init_service(
+            App::new()
+                .data(connection_pool.clone())
+                .route("/", web::get().to(get_sys_list)),
+        )
+        .await;
+        let req = test::TestRequest::get().to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success());
+    }
+
+    #[actix_rt::test]
+    pub async fn test_get_sys_info_page() {
+        dotenv::dotenv().ok();
+        let connection_url = std::env::var("DATABASE_URL_TEST").expect("Database URL not found");
+        let connection_pool =
+            db::create_db_pool(&connection_url).expect("Failed to create db pool");
+
+        let mut app = test::init_service(
+            App::new()
+                .data(connection_pool.clone())
+                .route("/pc3", web::get().to(get_sys_info_page)),
+        )
+        .await;
+        let req = test::TestRequest::get()
+            .header("Content-Type", "application/json")
+            .uri("/pc3")
+            .param("index", "0")
+            .param("size", "6")
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+        println!("{:?}", resp);
+        assert!(resp.status().is_success());
+
+        let req = test::TestRequest::get().uri("/pc3").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_client_error());
+    }
+
+    #[actix_rt::test]
+    pub async fn test_post_sys_info() {
+        dotenv::dotenv().ok();
+        let connection_url = std::env::var("DATABASE_URL_TEST").expect("Database URL not found");
+        let connection_pool =
+            db::create_db_pool(&connection_url).expect("Failed to create db pool");
+
+        let mut app = test::init_service(
+            App::new()
+                .data(connection_pool.clone())
+                .route("/", web::post().to(post_sys_info)),
+        )
+        .await;
+
+        let valid_model = SysInfoSnapshotDto {
+            pc_name: String::from("pc2"),
+            cpu_usage: String::from("0: 1% 2: 3%"),
+            mem_usage: String::from("300/5000"),
+            recorded_at: 123231,
+        };
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/json")
+            .set_json(&valid_model)
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+        println!("{:?}", resp);
+        assert!(resp.status().is_success());
+
+        let req = test::TestRequest::post()
+            .header("Content-Type", "application/json")
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_client_error());
+    }
 }

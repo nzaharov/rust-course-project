@@ -2,7 +2,7 @@ use crate::schema::entries;
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Insertable)]
 #[table_name = "entries"]
 pub struct SysInfoSnapshotDto {
     pub pc_name: String,
